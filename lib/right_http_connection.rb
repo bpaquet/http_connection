@@ -280,7 +280,13 @@ them.
       @protocol = request_params[:protocol]
 
       @logger.debug("Opening new #{@protocol.upcase} connection to #@server:#@port")
-      @http              = Net::HTTP.new(@server, @port)
+      if @protocol == 'https' && ENV['https_proxy']
+        proxy_uri = URI.parse(ENV['https_proxy'])
+        @http = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port).new(@server, @port)
+        @http.use_ssl = true
+      else
+        @http              = Net::HTTP.new(@server, @port)
+      end
       @http.open_timeout = @params[:http_connection_open_timeout]
       @http.read_timeout = @params[:http_connection_read_timeout]
 
